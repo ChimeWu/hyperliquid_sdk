@@ -1,4 +1,4 @@
-use crate::ws::sub_structs::*;
+use crate::{ws::sub_structs::*, UserStateResponse};
 use serde::Deserialize;
 
 #[derive(Deserialize, Clone, Debug)]
@@ -54,6 +54,7 @@ pub struct Notification {
 #[derive(Deserialize, Clone, Debug)]
 pub struct WebData2 {
     pub data: WebData2Data,
+    pub clearinghouse_state: UserStateResponse,
 }
 
 #[derive(Deserialize, Clone, Debug)]
