@@ -10,6 +10,7 @@ pub struct UserStateResponse {
     pub asset_positions: Vec<AssetPosition>,
     pub cross_margin_summary: MarginSummary,
     pub margin_summary: MarginSummary,
+    pub cross_maintenance_margin_used: String,
     pub withdrawable: String,
 }
 
