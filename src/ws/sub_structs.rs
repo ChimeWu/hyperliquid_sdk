@@ -2,6 +2,8 @@ use ethers::types::H160;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+use crate::UserStateResponse;
+
 #[derive(Deserialize, Clone, Debug)]
 pub struct Trade {
     pub coin: String,
@@ -278,6 +280,7 @@ pub struct NotificationData {
 #[serde(rename_all = "camelCase")]
 pub struct WebData2Data {
     pub user: H160,
+    pub clearinghouse_state: UserStateResponse,
 }
 
 #[derive(Deserialize, Clone, Debug)]

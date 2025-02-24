@@ -4,7 +4,7 @@ use ethers::types::H160;
 
 use hyperliquid_rust_sdk::{
     BaseUrl, ClientCancelRequest, ClientLimit, ClientOrder, ClientOrderRequest, ExchangeClient,
-    ExchangeDataStatus, ExchangeResponseStatus, InfoClient, MarketOrderParams,
+    ExchangeDataStatus, ExchangeResponseStatus, InfoClient,
 };
 use std::{thread::sleep, time::Duration};
 
@@ -51,6 +51,8 @@ async fn main() {
     info!("User token balances: {balances:?}");
     let open_orders = info_client.open_orders(user).await.unwrap();
     info!("Open orders: {open_orders:?}");
+    let order0 = info_client.query_order_by_oid(user,open_orders[0].oid).await.unwrap();
+    info!("Order 0: {order0:?}");
     let response = match response {
         ExchangeResponseStatus::Ok(exchange_response) => exchange_response,
         ExchangeResponseStatus::Err(e) => panic!("error with exchange response: {e}"),
@@ -74,4 +76,6 @@ async fn main() {
     // This response will return an error if order was filled (since you can't cancel a filled order), otherwise it will cancel the order
     let response = exchange_client.cancel(cancel, None).await.unwrap();
     info!("Order potentially cancelled: {response:?}");
+    let order0 = info_client.query_order_by_oid(user,24904552936).await.unwrap();
+    info!("Order 0: {order0:?}");
 }
