@@ -14,7 +14,7 @@ use tokio::{
 async fn main() {
     env_logger::init();
     let mut info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
-    let user = H160::from_str("0xc64cc00b46101bd40aa1c3121195e85c0b0918d8").unwrap();
+    let user = H160::from_str("0x7271b723F864d77Db16C20dDf0eC8b78Df05aeb2").unwrap();
 
     let (sender, mut receiver) = unbounded_channel();
     let subscription_id = info_client
@@ -23,7 +23,7 @@ async fn main() {
         .unwrap();
 
     spawn(async move {
-        sleep(Duration::from_secs(30)).await;
+        sleep(Duration::from_secs(300)).await;
         info!("Unsubscribing from order updates data");
         info_client.unsubscribe(subscription_id).await.unwrap()
     });

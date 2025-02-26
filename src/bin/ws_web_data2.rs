@@ -23,7 +23,7 @@ async fn main() {
         .unwrap();
 
     spawn(async move {
-        sleep(Duration::from_secs(30)).await;
+        sleep(Duration::from_secs(300)).await;
         info!("Unsubscribing from web data2");
         info_client.unsubscribe(subscription_id).await.unwrap()
     });

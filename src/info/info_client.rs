@@ -3,7 +3,7 @@ use crate::{
         CandlesSnapshotResponse, FundingHistoryResponse, L2SnapshotResponse, OpenOrdersResponse,
         OrderInfo, RecentTradesResponse, UserFillsResponse, UserStateResponse,
     },
-    meta::{Meta, SpotMeta, SpotMetaAndAssetCtxs},
+    meta::{FundingRate, Meta, MetaAndAssetCtxs, SpotMeta, SpotMetaAndAssetCtxs},
     prelude::*,
     req::HttpClient,
     ws::{Subscription, WsManager},
@@ -14,6 +14,7 @@ use crate::{
 use ethers::types::H160;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -53,6 +54,7 @@ pub enum InfoRequest {
         oid: u64,
     },
     Meta,
+    MetaAndAssetCtxs,
     SpotMeta,
     SpotMetaAndAssetCtxs,
     AllMids,
@@ -71,6 +73,7 @@ pub enum InfoRequest {
         start_time: u64,
         end_time: Option<u64>,
     },
+    PredictedFundings,
     L2Book {
         coin: String,
     },
@@ -205,6 +208,11 @@ impl InfoClient {
         self.send_info_request(input).await
     }
 
+    pub async fn meta_and_asset_contexts(&self) -> Result<Vec<MetaAndAssetCtxs>> {
+        let input = InfoRequest::MetaAndAssetCtxs;
+        self.send_info_request(input).await
+    }
+
     pub async fn spot_meta(&self) -> Result<SpotMeta> {
         let input = InfoRequest::SpotMeta;
         self.send_info_request(input).await
@@ -223,6 +231,52 @@ impl InfoClient {
     pub async fn user_fills(&self, address: H160) -> Result<Vec<UserFillsResponse>> {
         let input = InfoRequest::UserFills { user: address };
         self.send_info_request(input).await
+    }
+
+    pub async fn funding_rates(&self) -> Result<Vec<FundingRate>> {
+        let mut meta_and_contexts = self.meta_and_asset_contexts().await?;
+        let predicted_fundings = self.predicted_fundings().await?;
+        let context = match meta_and_contexts
+            .pop()
+            .unwrap_or(MetaAndAssetCtxs::Context(vec![]))
+        {
+            MetaAndAssetCtxs::Context(context) => context,
+            _ => return Err(Error::GenericParse("Context not found".to_string())),
+        };
+        let meta = match meta_and_contexts
+            .pop()
+            .unwrap_or(MetaAndAssetCtxs::Meta(Meta { universe: vec![] }))
+        {
+            MetaAndAssetCtxs::Meta(meta) => meta.universe,
+            _ => return Err(Error::GenericParse("Meta not found".to_string())),
+        };
+        Ok(FundingRate::construct(meta, context, predicted_fundings))
+    }
+
+    pub async fn predicted_fundings(&self) -> Result<HashMap<String, String>> {
+        let input = InfoRequest::PredictedFundings;
+        let json_values: Vec<Vec<Value>> = self.send_info_request(input).await?;
+        let mut predicts = HashMap::new();
+        for value in json_values {
+            let mut rates = vec![];
+            if let Value::Array(values) = &value[1] {
+                for value in values {
+                    if let Value::Array(item) = value {
+                        if let Value::Object(obj) = &item[1] {
+                            if let Some(Value::String(rate)) = obj.get("fundingRate") {
+                                rates.push(rate.parse::<f64>().unwrap_or_default());
+                            }
+                        }
+                    }
+                }
+            }
+            let rate = rates.iter().sum::<f64>() / rates.len() as f64;
+            predicts.insert(
+                value[0].as_str().unwrap_or_default().to_string(),
+                rate.to_string(),
+            );
+        }
+        Ok(predicts)
     }
 
     pub async fn funding_history(
@@ -294,5 +348,66 @@ impl InfoClient {
     pub async fn historical_orders(&self, address: H160) -> Result<Vec<OrderInfo>> {
         let input = InfoRequest::HistoricalOrders { user: address };
         self.send_info_request(input).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use crate::meta::AssetContext;
+
+    use super::*;
+
+    #[tokio::test]
+    async fn test_meta_and_asset_contexts() {
+        let info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
+        // let user:H160 = "0x7271b723F864d77Db16C20dDf0eC8b78Df05aeb2".to_string().parse().unwrap();
+        let meta_and_asset_contexts = match info_client.meta_and_asset_contexts().await {
+            Ok(meta_and_asset_contexts) => meta_and_asset_contexts,
+            Err(e) => panic!("Error: {e}"),
+        };
+        //println!("{:?}", meta_and_asset_contexts);
+        assert!(meta_and_asset_contexts.len() == 2);
+    }
+
+    #[tokio::test]
+    async fn test_meta_and_asset_contexts_raw() {
+        let client = Client::new();
+        let resp = client
+            .post("https://api.hyperliquid.xyz/info")
+            .header("Content-Type", "application/json")
+            .body(serde_json::to_string(&InfoRequest::MetaAndAssetCtxs).unwrap())
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap();
+        //println!("{:?}", resp);
+        let resp: Vec<serde_json::Value> = serde_json::from_str(&resp).unwrap();
+        //let meta: Meta = serde_json::from_value(resp[0].clone()).unwrap();
+        //println!("{:?}", resp);
+        let _asset_context: Vec<AssetContext> = serde_json::from_value(resp[1].clone()).unwrap();
+        //println!("{:?}", asset_context);
+    }
+
+    #[tokio::test]
+    async fn test_predicted_fundings() {
+        let info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
+        let predicted_fundings = match info_client.predicted_fundings().await {
+            Ok(predicted_fundings) => predicted_fundings,
+            Err(e) => panic!("Error: {e}"),
+        };
+        println!("{:?}", predicted_fundings);
+    }
+
+    #[tokio::test]
+    async fn test_funding_rates() {
+        let info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
+        let funding_rates = match info_client.funding_rates().await {
+            Ok(funding_rates) => funding_rates,
+            Err(e) => panic!("Error: {e}"),
+        };
+        println!("{:?}", funding_rates);
     }
 }

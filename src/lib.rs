@@ -1,4 +1,3 @@
-#![deny(unreachable_pub)]
 mod consts;
 mod errors;
 mod exchange;
