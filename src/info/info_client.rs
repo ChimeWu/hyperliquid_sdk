@@ -260,12 +260,10 @@ impl InfoClient {
         for value in json_values {
             let mut rates = vec![];
             if let Value::Array(values) = &value[1] {
-                for value in values {
-                    if let Value::Array(item) = value {
-                        if let Value::Object(obj) = &item[1] {
-                            if let Some(Value::String(rate)) = obj.get("fundingRate") {
-                                rates.push(rate.parse::<f64>().unwrap_or_default());
-                            }
+                if let Value::Array(item) = &values[1] {
+                    if let Value::Object(obj) = &item[1] {
+                        if let Some(Value::String(rate)) = obj.get("fundingRate") {
+                            rates.push(rate.parse::<f64>().unwrap_or_default());
                         }
                     }
                 }
