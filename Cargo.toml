@@ -1,13 +1,13 @@
 [package]
-name = "hyperliquid_rust_sdk"
-version = "0.5.0"
+name = "hyperliquid_sdk"
+version = "0.5.2"
 edition = "2021"
 license = "MIT"
 description = "Rust SDK for Hyperliquid"
 homepage = "https://hyperliquid.xyz/"
 readme = "README.md"
-documentation = "https://github.com/hyperliquid-dex/hyperliquid-rust-sdk"
-repository = "https://github.com/hyperliquid-dex/hyperliquid-rust-sdk"
+documentation = "https://github.com/ChimeWu/hyperliquid_sdk.git"
+repository = "https://github.com/ChimeWu/hyperliquid_sdk.git"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

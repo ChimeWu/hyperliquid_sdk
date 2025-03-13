@@ -9,7 +9,7 @@ struct ErrorData {
     msg: String,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct HttpClient {
     pub client: Client,
     pub base_url: String,

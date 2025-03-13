@@ -92,7 +92,7 @@ pub enum InfoRequest {
     },
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub struct InfoClient {
     pub http_client: HttpClient,
     pub(crate) ws_manager: Option<WsManager>,
@@ -359,7 +359,7 @@ mod tests {
     #[tokio::test]
     async fn test_meta_and_asset_contexts() {
         let info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
-        // let user:H160 = "0x7271b723F864d77Db16C20dDf0eC8b78Df05aeb2".to_string().parse().unwrap();
+        // let user:H160 = "somepubkey".to_string().parse().unwrap();
         let meta_and_asset_contexts = match info_client.meta_and_asset_contexts().await {
             Ok(meta_and_asset_contexts) => meta_and_asset_contexts,
             Err(e) => panic!("Error: {e}"),

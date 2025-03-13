@@ -3,7 +3,7 @@ use log::info;
 use std::str::FromStr;
 
 use ethers::types::H160;
-use hyperliquid_rust_sdk::{BaseUrl, InfoClient, Message, Subscription};
+use hyperliquid_sdk::{BaseUrl, InfoClient, Message, Subscription};
 use tokio::{
     spawn,
     sync::mpsc::unbounded_channel,
@@ -14,7 +14,7 @@ use tokio::{
 async fn main() {
     env_logger::init();
     let mut info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
-    let user = H160::from_str("0x7271b723F864d77Db16C20dDf0eC8b78Df05aeb2").unwrap();
+    let user = H160::from_str("somepubkey").unwrap();
 
     let (sender, mut receiver) = unbounded_channel();
     let subscription_id = info_client

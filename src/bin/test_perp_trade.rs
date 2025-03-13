@@ -2,7 +2,7 @@ use ethers::signers::LocalWallet;
 use ethers::types::H160;
 use log::info;
 
-use hyperliquid_rust_sdk::{
+use hyperliquid_sdk::{
     BaseUrl, ClientCancelRequest, ClientLimit, ClientOrder, ClientOrderRequest, ExchangeClient,
     ExchangeDataStatus, ExchangeResponseStatus, InfoClient,
 };
@@ -12,19 +12,14 @@ use std::{thread::sleep, time::Duration};
 async fn main() {
     env_logger::init();
     // Key was randomly generated for testing and shouldn't be used with any real funds
-    let wallet: LocalWallet = "4eaab9c7f0230b232abeb23701b927c7190e4b424aeb7a5bfe92b60546aa4aa1"
-        .parse()
-        .unwrap();
+    let wallet: LocalWallet = "somesecretkey".parse().unwrap();
 
     let exchange_client = ExchangeClient::new(None, wallet, Some(BaseUrl::Testnet), None, None)
         .await
         .unwrap();
 
     let info_client = InfoClient::new(None, Some(BaseUrl::Testnet)).await.unwrap();
-    let user: H160 = "0x7271b723F864d77Db16C20dDf0eC8b78Df05aeb2"
-        .to_string()
-        .parse()
-        .unwrap();
+    let user: H160 = "somepubkey".to_string().parse().unwrap();
 
     let balances = info_client.user_token_balances(user).await.unwrap();
     info!("User token balances: {balances:?}");
